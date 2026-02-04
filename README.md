@@ -55,6 +55,25 @@ cp env.example .env
 
 ### Run Locally
 
+**Easy way (one command):**
+```bash
+./start-dev.sh
+```
+
+This will:
+- Start Anvil (local blockchain)
+- Deploy the contract
+- Update .env files automatically
+- Start backend API
+- Start frontend
+- Show you all the URLs and test account info
+
+**Stop all services:**
+```bash
+./stop-dev.sh
+```
+
+**Manual way (if you prefer):**
 ```bash
 # Terminal 1: Start Anvil (local blockchain)
 anvil
