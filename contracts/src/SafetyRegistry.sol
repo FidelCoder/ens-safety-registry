@@ -192,49 +192,150 @@ contract SafetyRegistry {
     }
 
     /**
-     * @notice Calculate privacy risk score for an address (0-100)
+     * @notice Calculate privacy risk score for an address (0-100)  
      * @param _address The address to evaluate
-     * @return privacyScore Privacy risk score (higher = more exposed/less private)
-     * @dev Considers: transaction history, interactions, address reuse patterns
+     * @return privacyScore Privacy risk score (higher = better privacy, 0 = fully exposed)
+     * @dev Enhanced scoring with multiple privacy factors
+     * @dev Returns only score for backwards compatibility. Use getPrivacyAnalysis for grade.
      */
     function calculatePrivacyScore(address _address) external view returns (uint256 privacyScore) {
+        (uint256 score, ) = _calculatePrivacyScoreInternal(_address);
+        return score;
+    }
+    
+    /**
+     * @notice Internal privacy calculation
+     * @param _address The address to evaluate
+     * @return score Privacy score
+     * @return grade Letter grade (0=A+, 1=A, 2=B, 3=C, 4=D, 5=F)
+     */
+    function _calculatePrivacyScoreInternal(address _address) internal view returns (uint256 score, uint8 grade) {
         uint256 balance = _address.balance;
         uint256 txCount = transactionCount[_address];
-        
-        // Base score starts at 0 (most private)
-        uint256 score = 0;
-        
-        // Factor 1: Transaction count (more txs = less private)
-        // Each transaction adds to exposure
-        if (txCount > 0) {
-            // Scale: 0-50 points based on transaction count
-            uint256 txScore = txCount > 50 ? 50 : txCount;
-            score += txScore;
-        }
-        
-        // Factor 2: Non-zero balance (holding funds reduces privacy)
-        // Having balance means address is actively used
-        if (balance > 0) {
-            score += 20;
-        }
-        
-        // Factor 3: If address has reports (public scrutiny reduces privacy)
         uint256[] memory reportIds = addressToReports[_address];
-        if (reportIds.length > 0) {
-            score += 15;
+        
+        // Start with perfect score
+        uint256 score = 100;
+        
+        // Factor 1: High transaction activity (-30 points)
+        // More transactions = more on-chain footprint
+        if (txCount > 50) {
+            score = score >= 30 ? score - 30 : 0; // Critical exposure
+        } else if (txCount > 20) {
+            score = score >= 15 ? score - 15 : 0; // High exposure
+        } else if (txCount > 10) {
+            score = score >= 10 ? score - 10 : 0; // Medium exposure
+        } else if (txCount > 5) {
+            score = score >= 5 ? score - 5 : 0; // Low exposure
+        } else if (txCount > 0) {
+            score = score >= 2 ? score - 2 : 0; // Minimal exposure
         }
         
-        // Factor 4: Address age simulation (older = more exposed)
-        // In production, this could check first transaction timestamp
-        // For now, we use a simple heuristic
-        if (txCount > 10) {
-            score += 15;
+        // Factor 2: Active balance holder (-15 points)
+        // Holding balance = active address = trackable
+        if (balance > 10 ether) {
+            score = score >= 15 ? score - 15 : 0; // Large balance = high profile
+        } else if (balance > 1 ether) {
+            score = score >= 10 ? score - 10 : 0; // Medium balance
+        } else if (balance > 0) {
+            score = score >= 5 ? score - 5 : 0; // Small balance
         }
         
-        // Cap at 100
+        // Factor 3: Public reports/scrutiny (-15 points)
+        // Being reported makes address publicly known
+        if (reportIds.length > 5) {
+            score = score >= 15 ? score - 15 : 0; // Highly scrutinized
+        } else if (reportIds.length > 2) {
+            score = score >= 10 ? score - 10 : 0; // Moderately known
+        } else if (reportIds.length > 0) {
+            score = score >= 5 ? score - 5 : 0; // Some exposure
+        }
+        
+        // Factor 4: Address reuse pattern (-15 points)
+        // Repeated interactions reduce privacy
+        if (txCount > 0) {
+            uint256 reuseScore = (txCount * 15) / 100; // Scale reuse impact
+            if (reuseScore > 15) reuseScore = 15;
+            score = score >= reuseScore ? score - reuseScore : 0;
+        }
+        
+        // Factor 5: Contract interaction bonus (+10 points)
+        // Smart contract interactions can provide some privacy
+        uint256 codeSize;
+        assembly {
+            codeSize := extcodesize(_address)
+        }
+        if (codeSize > 0) {
+            // This is a contract, not EOA
+            if (score < 90) score += 10; // Slight privacy bonus
+        }
+        
+        // Ensure score stays in valid range
+        if (score < 0) score = 0;
         if (score > 100) score = 100;
         
-        return score;
+        // Calculate letter grade
+        uint8 gradeValue;
+        if (score >= 90) gradeValue = 0; // A+
+        else if (score >= 80) gradeValue = 1; // A
+        else if (score >= 70) gradeValue = 2; // B
+        else if (score >= 60) gradeValue = 3; // C
+        else if (score >= 40) gradeValue = 4; // D
+        else gradeValue = 5; // F
+        
+        return (score, gradeValue);
+    }
+    
+    /**
+     * @notice Get privacy grade as string
+     * @param _grade Grade value (0-5)
+     * @return Grade string
+     */
+    function getPrivacyGradeString(uint8 _grade) external pure returns (string memory) {
+        if (_grade == 0) return "A+";
+        if (_grade == 1) return "A";
+        if (_grade == 2) return "B";
+        if (_grade == 3) return "C";
+        if (_grade == 4) return "D";
+        return "F";
+    }
+    
+    /**
+     * @notice Get detailed privacy analysis
+     * @param _address The address to analyze
+     * @return score Overall privacy score
+     * @return grade Letter grade
+     * @return factors Array of [txActivity, balanceExposure, publicScrutiny, addressReuse, isContract]
+     */
+    function getPrivacyAnalysis(address _address) 
+        external 
+        view 
+        returns (
+            uint256 score,
+            uint8 grade,
+            uint256[5] memory factors
+        ) 
+    {
+        (score, grade) = _calculatePrivacyScoreInternal(_address);
+        
+        uint256 txCount = transactionCount[_address];
+        uint256 balance = _address.balance;
+        uint256 reportCount = addressToReports[_address].length;
+        
+        // Return individual factor scores
+        factors[0] = txCount; // Transaction activity
+        factors[1] = balance / 1 ether; // Balance in ETH
+        factors[2] = reportCount; // Public reports
+        factors[3] = txCount > 0 ? (txCount * 100) / 50 : 0; // Reuse ratio
+        
+        // Check if contract
+        uint256 codeSize;
+        assembly {
+            codeSize := extcodesize(_address)
+        }
+        factors[4] = codeSize > 0 ? 1 : 0; // Is contract
+        
+        return (score, grade, factors);
     }
 
     /**

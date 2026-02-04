@@ -116,27 +116,28 @@ contract SafetyRegistryTest is Test {
     }
 
     function testCalculatePrivacyScore() public {
-        // New address should have low privacy score (no activity)
+        // New address should have perfect privacy score (100)
         uint256 initialScore = registry.calculatePrivacyScore(alice);
+        assertEq(initialScore, 100); // Perfect privacy
         
-        // Submit report (increases transaction count for alice)
-        vm.prank(alice);
+        // Submit many reports to trigger score reduction (need >10 for -10 points)
+        vm.startPrank(alice);
+        for (uint i = 0; i < 12; i++) {
+            registry.submitReport(address(uint160(i + 1000)), "", SafetyRegistry.ReportReason.Scam, "Evidence");
+        }
+        vm.stopPrank();
+
+        // Alice's privacy score should decrease (12 transactions = -10 points)
+        uint256 aliceScore = registry.calculatePrivacyScore(alice);
+        assertLe(aliceScore, 90); // At least -10 points
+
+        // Submit report against malicious address
+        vm.prank(bob);
         registry.submitReport(maliciousAddr, "", SafetyRegistry.ReportReason.Scam, "Evidence");
 
-        // Alice's privacy score should increase (she made a transaction)
-        uint256 afterReportScore = registry.calculatePrivacyScore(alice);
-        assertGt(afterReportScore, initialScore);
-
-        // More transactions = higher privacy risk
-        vm.prank(alice);
-        registry.voteOnReport(0, true);
-        
-        uint256 afterVoteScore = registry.calculatePrivacyScore(alice);
-        assertGt(afterVoteScore, afterReportScore);
-
-        // Target address privacy score should be > 0 (has reports against it)
+        // Target address with reports should have reduced privacy
         uint256 targetScore = registry.calculatePrivacyScore(maliciousAddr);
-        assertGt(targetScore, 0);
+        assertLt(targetScore, 100); // Reports reduce privacy (at least -5)
     }
 
     function testPrivacyScoreFactors() public {
@@ -144,10 +145,41 @@ contract SafetyRegistryTest is Test {
         vm.prank(alice);
         registry.submitReport(maliciousAddr, "", SafetyRegistry.ReportReason.Scam, "Evidence");
 
-        // Address with reports should have higher score than no activity
+        // Address with reports should have lower privacy score
         uint256 reportedScore = registry.calculatePrivacyScore(maliciousAddr);
         uint256 cleanScore = registry.calculatePrivacyScore(address(0x99999));
         
-        assertGt(reportedScore, cleanScore);
+        assertLt(reportedScore, cleanScore); // Reported = less private
+    }
+
+    function testPrivacyAnalysis() public {
+        // Submit multiple transactions for meaningful analysis
+        vm.startPrank(alice);
+        for (uint i = 0; i < 15; i++) {
+            registry.submitReport(address(uint160(i + 1000)), "", SafetyRegistry.ReportReason.Scam, "Evidence");
+        }
+        vm.stopPrank();
+        
+        (uint256 score, uint8 grade, uint256[5] memory factors) = registry.getPrivacyAnalysis(alice);
+        
+        // Should have score and grade
+        assertLt(score, 100); // 15 transactions reduce privacy
+        assertGe(grade, 0);
+        assertLe(grade, 5);
+        
+        // Factors should reflect activity
+        assertEq(factors[0], 15); // 15 transactions
+        assertEq(factors[2], 0); // 0 reports against alice
+    }
+
+    function testPrivacyGradeString() public view {
+        // Test grade conversion
+        string memory gradeAPlus = registry.getPrivacyGradeString(0);
+        string memory gradeA = registry.getPrivacyGradeString(1);
+        string memory gradeF = registry.getPrivacyGradeString(5);
+        
+        assertEq(keccak256(bytes(gradeAPlus)), keccak256(bytes("A+")));
+        assertEq(keccak256(bytes(gradeA)), keccak256(bytes("A")));
+        assertEq(keccak256(bytes(gradeF)), keccak256(bytes("F")));
     }
 }
