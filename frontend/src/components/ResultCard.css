@@ -134,8 +134,38 @@
 }
 
 .report-votes {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.vote-button {
+  padding: 0.25rem 0.75rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  background: white;
   font-size: 0.9rem;
-  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.vote-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.vote-button.upvote:hover:not(:disabled) {
+  border-color: #2ecc71;
+  background: #f0fff4;
+}
+
+.vote-button.downvote:hover:not(:disabled) {
+  border-color: #e74c3c;
+  background: #fff5f5;
+}
+
+.vote-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .report-evidence {

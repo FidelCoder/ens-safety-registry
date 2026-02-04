@@ -1,26 +1,49 @@
 import React, { useState } from 'react';
 import './ReportForm.css';
+import { getProviderAndSigner } from '../utils/wallet';
+import { submitReport } from '../utils/contract';
 
-function ReportForm({ defaultAddress = '', onClose }) {
+function ReportForm({ defaultAddress = '', onClose, account }) {
   const [formData, setFormData] = useState({
     address: defaultAddress,
     ensName: '',
     reason: 'Phishing',
     evidence: ''
   });
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    alert(
-      'To submit a report, you need to:\n\n' +
-      '1. Connect your wallet\n' +
-      '2. Sign the transaction on-chain\n\n' +
-      'This is a demo - in production, this would interact with MetaMask/WalletConnect.'
-    );
+    if (!account) {
+      alert('Please connect your wallet first');
+      return;
+    }
     
-    console.log('Report data:', formData);
-    onClose();
+    setSubmitting(true);
+    
+    try {
+      const { signer } = await getProviderAndSigner();
+      
+      const receipt = await submitReport(
+        signer,
+        formData.address,
+        formData.ensName,
+        formData.reason,
+        formData.evidence
+      );
+      
+      alert('Report submitted successfully!\n\nTransaction: ' + receipt.hash);
+      onClose();
+      
+      // Refresh the page to show new report
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      alert('Failed to submit report: ' + error.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -89,16 +112,20 @@ function ReportForm({ defaultAddress = '', onClose }) {
           </div>
 
           <div className="form-actions">
-            <button type="button" className="cancel-button" onClick={onClose}>
+            <button type="button" className="cancel-button" onClick={onClose} disabled={submitting}>
               Cancel
             </button>
-            <button type="submit" className="submit-button">
-              Submit Report
+            <button type="submit" className="submit-button" disabled={submitting}>
+              {submitting ? 'Submitting...' : 'Submit Report'}
             </button>
           </div>
 
           <p className="form-note">
-            ℹ️ Reports are stored on-chain and require a small gas fee
+            {account ? (
+              <>ℹ️ Reports are stored on-chain and require a small gas fee</>
+            ) : (
+              <>⚠️ Please connect your wallet first</>
+            )}
           </p>
         </form>
       </div>

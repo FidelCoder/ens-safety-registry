@@ -4,11 +4,13 @@ import SearchBar from './components/SearchBar';
 import ResultCard from './components/ResultCard';
 import ReportForm from './components/ReportForm';
 import RecentReports from './components/RecentReports';
+import WalletConnect from './components/WalletConnect';
 
 function App() {
   const [searchResult, setSearchResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showReportForm, setShowReportForm] = useState(false);
+  const [account, setAccount] = useState(null);
 
   const handleSearch = async (address) => {
     setLoading(true);
@@ -37,19 +39,23 @@ function App() {
       </header>
 
       <main className="container">
+        <WalletConnect onAccountChange={setAccount} />
+        
         <SearchBar onSearch={handleSearch} loading={loading} />
 
         {searchResult && (
           <ResultCard 
             result={searchResult} 
-            onReport={() => setShowReportForm(true)} 
+            onReport={() => setShowReportForm(true)}
+            account={account}
           />
         )}
 
         {showReportForm && (
           <ReportForm 
             defaultAddress={searchResult?.address}
-            onClose={() => setShowReportForm(false)} 
+            onClose={() => setShowReportForm(false)}
+            account={account}
           />
         )}
 

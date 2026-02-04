@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './ResultCard.css';
+import { getProviderAndSigner } from '../utils/wallet';
+import { voteOnReport } from '../utils/contract';
 
-function ResultCard({ result, onReport }) {
+function ResultCard({ result, onReport, account }) {
   const { address, isFlagged, riskScore, reportCount, reports, externalFlags } = result;
+  const [voting, setVoting] = useState(null);
 
   const getRiskLevel = (score) => {
     if (score >= 70) return { label: 'High Risk', color: '#e74c3c' };
@@ -12,6 +15,28 @@ function ResultCard({ result, onReport }) {
   };
 
   const risk = getRiskLevel(riskScore);
+
+  const handleVote = async (reportId, isUpvote) => {
+    if (!account) {
+      alert('Please connect your wallet to vote');
+      return;
+    }
+
+    setVoting(reportId);
+    
+    try {
+      const { signer } = await getProviderAndSigner();
+      await voteOnReport(signer, reportId, isUpvote);
+      
+      alert('Vote submitted successfully!');
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (error) {
+      console.error('Error voting:', error);
+      alert('Failed to vote: ' + error.message);
+    } finally {
+      setVoting(null);
+    }
+  };
 
   return (
     <div className="result-card">
@@ -67,9 +92,24 @@ function ResultCard({ result, onReport }) {
               <div key={report.id} className="report-item">
                 <div className="report-header">
                   <span className="report-reason">{report.reason}</span>
-                  <span className="report-votes">
-                    👍 {report.upvotes} | 👎 {report.downvotes}
-                  </span>
+                  <div className="report-votes">
+                    <button
+                      className="vote-button upvote"
+                      onClick={() => handleVote(report.id, true)}
+                      disabled={voting === report.id || !account}
+                      title={account ? "Vote this is malicious" : "Connect wallet to vote"}
+                    >
+                      👍 {report.upvotes}
+                    </button>
+                    <button
+                      className="vote-button downvote"
+                      onClick={() => handleVote(report.id, false)}
+                      disabled={voting === report.id || !account}
+                      title={account ? "Vote this is safe" : "Connect wallet to vote"}
+                    >
+                      👎 {report.downvotes}
+                    </button>
+                  </div>
                 </div>
                 <p className="report-evidence">{report.evidence}</p>
                 <span className="report-date">
