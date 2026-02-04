@@ -48,3 +48,4 @@ broadcast/
 
 # Backend .env
 backend/.env
+frontend/.env
