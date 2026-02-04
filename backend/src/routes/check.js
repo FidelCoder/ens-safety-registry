@@ -31,6 +31,7 @@ router.get('/:address', async (req, res) => {
     const contract = getContractInstance();
     const [isFlagged, reportIds] = await contract.checkAddress(address);
     const riskScore = await contract.calculateRiskScore(address);
+    const privacyScore = await contract.calculatePrivacyScore(address);
 
     // Get external data (from known scam lists)
     const externalData = await aggregateExternalData(address);
@@ -58,6 +59,7 @@ router.get('/:address', async (req, res) => {
       address,
       isFlagged,
       riskScore: Number(riskScore),
+      privacyScore: Number(privacyScore),
       reportCount: reports.length,
       reports,
       externalFlags: externalData,

@@ -4,7 +4,7 @@ import { getProviderAndSigner } from '../utils/wallet';
 import { voteOnReport } from '../utils/contract';
 
 function ResultCard({ result, onReport, account }) {
-  const { address, isFlagged, riskScore, reportCount, reports, externalFlags } = result;
+  const { address, isFlagged, riskScore, privacyScore, reportCount, reports, externalFlags } = result;
   const [voting, setVoting] = useState(null);
 
   const getRiskLevel = (score) => {
@@ -14,7 +14,15 @@ function ResultCard({ result, onReport, account }) {
     return { label: 'No Risk', color: '#2ecc71' };
   };
 
+  const getPrivacyLevel = (score) => {
+    if (score >= 70) return { label: 'Low Privacy', color: '#e74c3c', icon: '🔴' };
+    if (score >= 40) return { label: 'Medium Privacy', color: '#f39c12', icon: '🟡' };
+    if (score > 0) return { label: 'Good Privacy', color: '#3498db', icon: '🔵' };
+    return { label: 'High Privacy', color: '#2ecc71', icon: '🟢' };
+  };
+
   const risk = getRiskLevel(riskScore);
+  const privacy = getPrivacyLevel(privacyScore || 0);
 
   const handleVote = async (reportId, isUpvote) => {
     if (!account) {
@@ -54,7 +62,7 @@ function ResultCard({ result, onReport, account }) {
         </div>
 
         <div className="result-section">
-          <label>Risk Score:</label>
+          <label>Security Risk Score:</label>
           <div className="risk-display">
             <div className="risk-bar-container">
               <div 
@@ -69,6 +77,27 @@ function ResultCard({ result, onReport, account }) {
               {riskScore}/100 - {risk.label}
             </span>
           </div>
+        </div>
+
+        <div className="result-section">
+          <label>Privacy Risk Score:</label>
+          <div className="risk-display">
+            <div className="risk-bar-container">
+              <div 
+                className="risk-bar" 
+                style={{ 
+                  width: `${privacyScore || 0}%`,
+                  background: privacy.color 
+                }}
+              />
+            </div>
+            <span className="risk-label" style={{ color: privacy.color }}>
+              {privacy.icon} {privacyScore || 0}/100 - {privacy.label}
+            </span>
+          </div>
+          <p className="privacy-explanation">
+            Higher score = more exposed. Based on transaction activity, balance, and public scrutiny.
+          </p>
         </div>
 
         <div className="result-section">

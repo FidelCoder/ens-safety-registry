@@ -114,4 +114,40 @@ contract SafetyRegistryTest is Test {
         score = registry.calculateRiskScore(maliciousAddr);
         assertGt(score, 0);
     }
+
+    function testCalculatePrivacyScore() public {
+        // New address should have low privacy score (no activity)
+        uint256 initialScore = registry.calculatePrivacyScore(alice);
+        
+        // Submit report (increases transaction count for alice)
+        vm.prank(alice);
+        registry.submitReport(maliciousAddr, "", SafetyRegistry.ReportReason.Scam, "Evidence");
+
+        // Alice's privacy score should increase (she made a transaction)
+        uint256 afterReportScore = registry.calculatePrivacyScore(alice);
+        assertGt(afterReportScore, initialScore);
+
+        // More transactions = higher privacy risk
+        vm.prank(alice);
+        registry.voteOnReport(0, true);
+        
+        uint256 afterVoteScore = registry.calculatePrivacyScore(alice);
+        assertGt(afterVoteScore, afterReportScore);
+
+        // Target address privacy score should be > 0 (has reports against it)
+        uint256 targetScore = registry.calculatePrivacyScore(maliciousAddr);
+        assertGt(targetScore, 0);
+    }
+
+    function testPrivacyScoreFactors() public {
+        // Test that privacy score considers multiple factors
+        vm.prank(alice);
+        registry.submitReport(maliciousAddr, "", SafetyRegistry.ReportReason.Scam, "Evidence");
+
+        // Address with reports should have higher score than no activity
+        uint256 reportedScore = registry.calculatePrivacyScore(maliciousAddr);
+        uint256 cleanScore = registry.calculatePrivacyScore(address(0x99999));
+        
+        assertGt(reportedScore, cleanScore);
+    }
 }

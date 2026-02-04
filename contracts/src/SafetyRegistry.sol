@@ -32,6 +32,7 @@ contract SafetyRegistry {
     mapping(uint256 => Report) public reports;
     mapping(address => uint256[]) public addressToReports;
     mapping(address => mapping(uint256 => bool)) public hasVoted;
+    mapping(address => uint256) public transactionCount; // Track transactions for privacy score
     uint256 public reportCount;
     uint256 public constant MIN_UPVOTES_FOR_FLAG = 3;
 
@@ -60,6 +61,9 @@ contract SafetyRegistry {
     ) external returns (uint256) {
         require(_targetAddress != address(0), "Invalid target address");
         require(bytes(_evidence).length > 0, "Evidence required");
+
+        // Record transaction for privacy tracking
+        recordTransaction(msg.sender);
 
         uint256 reportId = reportCount++;
         
@@ -91,6 +95,9 @@ contract SafetyRegistry {
         require(_reportId < reportCount, "Report does not exist");
         require(!hasVoted[msg.sender][_reportId], "Already voted");
         require(!reports[_reportId].resolved, "Report already resolved");
+
+        // Record transaction for privacy tracking
+        recordTransaction(msg.sender);
 
         hasVoted[msg.sender][_reportId] = true;
 
@@ -182,5 +189,60 @@ contract SafetyRegistry {
         if (score > 100) score = 100;
 
         return score;
+    }
+
+    /**
+     * @notice Calculate privacy risk score for an address (0-100)
+     * @param _address The address to evaluate
+     * @return privacyScore Privacy risk score (higher = more exposed/less private)
+     * @dev Considers: transaction history, interactions, address reuse patterns
+     */
+    function calculatePrivacyScore(address _address) external view returns (uint256 privacyScore) {
+        uint256 balance = _address.balance;
+        uint256 txCount = transactionCount[_address];
+        
+        // Base score starts at 0 (most private)
+        uint256 score = 0;
+        
+        // Factor 1: Transaction count (more txs = less private)
+        // Each transaction adds to exposure
+        if (txCount > 0) {
+            // Scale: 0-50 points based on transaction count
+            uint256 txScore = txCount > 50 ? 50 : txCount;
+            score += txScore;
+        }
+        
+        // Factor 2: Non-zero balance (holding funds reduces privacy)
+        // Having balance means address is actively used
+        if (balance > 0) {
+            score += 20;
+        }
+        
+        // Factor 3: If address has reports (public scrutiny reduces privacy)
+        uint256[] memory reportIds = addressToReports[_address];
+        if (reportIds.length > 0) {
+            score += 15;
+        }
+        
+        // Factor 4: Address age simulation (older = more exposed)
+        // In production, this could check first transaction timestamp
+        // For now, we use a simple heuristic
+        if (txCount > 10) {
+            score += 15;
+        }
+        
+        // Cap at 100
+        if (score > 100) score = 100;
+        
+        return score;
+    }
+
+    /**
+     * @notice Record a transaction for privacy tracking
+     * @param _address The address that made a transaction
+     * @dev This should be called whenever someone interacts with the contract
+     */
+    function recordTransaction(address _address) internal {
+        transactionCount[_address]++;
     }
 }
