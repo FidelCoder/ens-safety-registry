@@ -45,3 +45,6 @@ broadcast/
 
 # TypeScript
 *.tsbuildinfo
+
+# Backend .env
+backend/.env
