@@ -1,0 +1,266 @@
+# ENS Safety Registry - Cursor Rules
+
+## Project Overview
+Community-driven safety registry for Ethereum addresses and ENS names. A public good for Web3 security.
+
+## Tech Stack
+- **Smart Contracts**: Solidity 0.8.20, Foundry
+- **Backend**: Node.js, Express, ethers.js v6
+- **Frontend**: React 18, vanilla CSS (no Tailwind)
+- **Testing**: Foundry tests, Jest (backend)
+
+## Development Workflow
+
+### 1. Always Start Small
+- Work on ONE component/feature at a time
+- Complete, test, and commit before moving to next
+- Don't build everything in one session
+
+### 2. File Organization
+```
+contracts/
+  src/          # Smart contracts
+  test/         # Contract tests
+  script/       # Deployment scripts
+
+backend/
+  src/
+    routes/     # API endpoints
+    utils/      # Helper functions
+    index.js    # Server entry
+
+frontend/
+  src/
+    components/ # React components
+    App.js      # Main app
+
+docs/          # Documentation
+examples/      # Integration examples
+```
+
+### 3. Coding Standards
+
+#### Solidity
+- Use explicit visibility modifiers
+- Always emit events for state changes
+- Require statements for validation
+- NatSpec comments for all public functions
+- Gas optimization: use uint256, avoid string concatenation
+
+#### JavaScript/Node.js
+- Use async/await (no .then() chains)
+- Destructure imports: `const { ethers } = require('ethers')`
+- Error handling: try/catch with meaningful messages
+- Arrow functions for callbacks
+- Environment variables via dotenv
+
+#### React
+- Functional components only (no class components)
+- Hooks: useState, useEffect, custom hooks
+- Props destructuring in function params
+- Separate CSS file per component
+- Semantic HTML elements
+
+#### CSS
+- No inline styles
+- BEM naming convention (optional)
+- Mobile-first responsive design
+- Use CSS variables for colors/spacing
+- Animations: subtle, performant (transform/opacity)
+
+### 4. Git Workflow
+
+#### Branch Strategy
+- `main`: production-ready code
+- `develop`: integration branch
+- `feature/xyz`: new features
+- `fix/xyz`: bug fixes
+
+#### Commit Messages
+Format: `<type>: <description>`
+
+Types:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation
+- `style`: Formatting, no code change
+- `refactor`: Code restructuring
+- `test`: Adding tests
+- `chore`: Maintenance tasks
+
+Examples:
+- `feat: add vote functionality to SafetyRegistry contract`
+- `fix: resolve API caching issue for flagged addresses`
+- `docs: update setup guide with Foundry instructions`
+
+#### Before Committing
+1. Run tests: `forge test` or `npm test`
+2. Check lints (if configured)
+3. Review changes: `git diff`
+4. Stage specific files: `git add <file>`
+5. Write clear commit message
+6. Push to feature branch, not main directly
+
+### 5. Testing Requirements
+
+#### Smart Contracts
+- Test coverage >80%
+- Test all public functions
+- Test edge cases (zero address, overflow, etc.)
+- Test access control
+- Run: `cd contracts && forge test -vvv`
+
+#### Backend
+- Test each API endpoint
+- Mock blockchain calls for speed
+- Test error handling
+- Run: `cd backend && npm test`
+
+#### Frontend
+- Manual testing in browser
+- Test responsive design
+- Test error states (API down, invalid input)
+
+### 6. Documentation
+
+#### Always Document
+- Function purpose and parameters
+- API endpoints with examples
+- Setup instructions
+- Known issues/limitations
+
+#### README Structure
+1. What it does (1 paragraph)
+2. Quick start (commands to run)
+3. Architecture (high-level)
+4. Links to detailed docs
+
+### 7. Security Considerations
+
+#### Smart Contracts
+- No floating pragma
+- Reentrancy guards if needed
+- Integer overflow checks (Solidity 0.8+ has built-in)
+- Access control for admin functions
+- Careful with delegatecall
+
+#### Backend
+- Input validation (address format, SQL injection)
+- Rate limiting (plan for production)
+- CORS: whitelist production domains
+- Never expose private keys
+- Environment variables for secrets
+
+#### Frontend
+- Sanitize user input before display
+- Don't store private keys
+- HTTPS only in production
+- CSP headers
+
+### 8. Performance
+
+#### Smart Contracts
+- Minimize storage writes (gas cost)
+- Use events instead of storage when possible
+- Batch operations where applicable
+- Consider gas limits for loops
+
+#### Backend
+- Cache frequently accessed data (5 min TTL)
+- Use connection pooling for DB
+- Paginate large result sets
+- Async operations for blockchain calls
+
+#### Frontend
+- Lazy load components
+- Debounce search input
+- Show loading states
+- Optimize images
+
+### 9. Common Commands
+
+```bash
+# Contracts
+cd contracts
+forge build              # Compile
+forge test              # Run tests
+forge test -vvv         # Verbose tests
+forge script script/Deploy.s.sol --broadcast  # Deploy
+
+# Backend
+cd backend
+npm run dev             # Development server
+npm test                # Run tests
+
+# Frontend
+cd frontend
+npm start               # Development server
+npm run build           # Production build
+
+# Full project
+npm run install:all     # Install all dependencies
+```
+
+### 10. Environment Variables
+
+Always use `.env` for:
+- RPC URLs
+- Private keys (test keys only!)
+- API keys
+- Contract addresses
+- Port numbers
+
+Never commit `.env` to git!
+
+### 11. When Stuck
+
+1. Read error messages carefully
+2. Check environment variables are set
+3. Verify services are running (Anvil, backend)
+4. Check contract is deployed
+5. Review recent git changes
+6. Ask for help with specific error
+
+### 12. Code Review Checklist
+
+Before PR:
+- [ ] Tests pass
+- [ ] Code is commented
+- [ ] No console.logs in production code
+- [ ] Environment variables documented
+- [ ] README updated if needed
+- [ ] No hardcoded values
+- [ ] Error handling implemented
+- [ ] Mobile-responsive (frontend)
+
+## Project-Specific Notes
+
+### Contract Deployment
+- Deploy to Sepolia testnet first
+- Save contract address to `.env`
+- Verify on Etherscan
+- Update frontend/backend with address
+
+### API Integration
+- Backend must have CONTRACT_ADDRESS set
+- Frontend must have REACT_APP_API_URL set
+- Cache TTL is 5 minutes (adjust in code)
+
+### Report Reasons Enum
+0: Phishing, 1: Scam, 2: RugPull, 3: MaliciousContract, 4: Spam, 5: Other
+
+### External Data Sources
+- ChainAbuse API (placeholder)
+- CryptoScamDB (placeholder)
+- Add real integrations in future milestones
+
+## Quick Reference Links
+
+- Foundry Book: https://book.getfoundry.sh/
+- ethers.js Docs: https://docs.ethers.org/v6/
+- React Docs: https://react.dev/
+- ENS Grants: https://ensgrants.xyz/
+
+---
+
+**Remember**: Build iteratively, test frequently, commit often!
