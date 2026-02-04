@@ -31,7 +31,10 @@ router.get('/:address', async (req, res) => {
     const contract = getContractInstance();
     const [isFlagged, reportIds] = await contract.checkAddress(address);
     const riskScore = await contract.calculateRiskScore(address);
-    const privacyScore = await contract.calculatePrivacyScore(address);
+    
+    // Get detailed privacy analysis
+    const [privacyScore, privacyGrade, privacyFactors] = await contract.getPrivacyAnalysis(address);
+    const gradeString = await contract.getPrivacyGradeString(privacyGrade);
 
     // Get external data (from known scam lists)
     const externalData = await aggregateExternalData(address);
@@ -60,6 +63,14 @@ router.get('/:address', async (req, res) => {
       isFlagged,
       riskScore: Number(riskScore),
       privacyScore: Number(privacyScore),
+      privacyGrade: gradeString,
+      privacyFactors: {
+        transactionActivity: Number(privacyFactors[0]),
+        balanceExposure: Number(privacyFactors[1]),
+        publicScrutiny: Number(privacyFactors[2]),
+        addressReuse: Number(privacyFactors[3]),
+        isContract: Number(privacyFactors[4]) === 1
+      },
       reportCount: reports.length,
       reports,
       externalFlags: externalData,

@@ -8,6 +8,8 @@ const SAFETY_REGISTRY_ABI = [
   "function getReport(uint256 _reportId) external view returns (tuple(address reporter, address targetAddress, string ensName, uint8 reason, string evidence, uint256 timestamp, uint256 upvotes, uint256 downvotes, bool resolved))",
   "function calculateRiskScore(address _address) external view returns (uint256 score)",
   "function calculatePrivacyScore(address _address) external view returns (uint256 privacyScore)",
+  "function getPrivacyAnalysis(address _address) external view returns (uint256 score, uint8 grade, uint256[5] factors)",
+  "function getPrivacyGradeString(uint8 _grade) external pure returns (string)",
   "function reportCount() external view returns (uint256)"
 ];
 

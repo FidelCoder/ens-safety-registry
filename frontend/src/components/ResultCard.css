@@ -95,6 +95,104 @@
   font-style: italic;
 }
 
+.privacy-section {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 2px solid #e9ecef;
+}
+
+.privacy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.privacy-grade-badge {
+  padding: 0.5rem 1.25rem;
+  border-radius: 20px;
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.privacy-factors {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid #dee2e6;
+}
+
+.privacy-factors h4 {
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1rem;
+}
+
+.factor-item {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  border-left: 3px solid #dee2e6;
+}
+
+.factor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.factor-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.factor-value {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.factor-tip {
+  font-size: 0.8rem;
+  color: #666;
+  margin: 0;
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
+.privacy-recommendations {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #e3f2fd 0%, #e8f5e9 100%);
+  border-radius: 8px;
+  border-left: 4px solid #2196f3;
+}
+
+.privacy-recommendations h4 {
+  margin-bottom: 0.75rem;
+  color: #1976d2;
+  font-size: 1rem;
+}
+
+.privacy-recommendations ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.privacy-recommendations li {
+  color: #424242;
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+
+.privacy-recommendations li:last-child {
+  margin-bottom: 0;
+}
+
 .report-count,
 .flag-count {
   font-size: 1.1rem;
