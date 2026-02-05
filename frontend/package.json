@@ -10,9 +10,6 @@
     "axios": "^1.6.2",
     "ajv": "^6.12.6"
   },
-  "resolutions": {
-    "ajv": "^6.12.6"
-  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
