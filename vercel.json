@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "frontend/$1"
+    }
+  ],
+  "env": {
+    "REACT_APP_CONTRACT_ADDRESS": "0x69Ba96799Bd414968854A3cb35162d33683554C2",
+    "REACT_APP_CHAIN_ID": "11155111",
+    "REACT_APP_NETWORK_NAME": "Sepolia"
+  }
+}

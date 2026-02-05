@@ -1,0 +1,5 @@
+node_modules
+backend
+contracts
+.env*
+*.log
