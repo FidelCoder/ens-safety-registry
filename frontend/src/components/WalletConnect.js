@@ -23,6 +23,7 @@ function WalletConnect({ onAccountChange }) {
         window.ethereum.removeListener('chainChanged', handleChainChanged);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkConnection = async () => {

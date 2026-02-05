@@ -103,8 +103,6 @@ export const switchNetwork = async (chainId) => {
  * Switch to Sepolia testnet
  */
 export const switchToSepolia = async () => {
-  const SEPOLIA_CHAIN_ID = 11155111; // 0xaa36a7
-  
   try {
     await window.ethereum.request({
       method: 'wallet_switchEthereumChain',
