@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "src/index.js"
+    }
+  ],
+  "env": {
+    "CONTRACT_ADDRESS": "0x69Ba96799Bd414968854A3cb35162d33683554C2",
+    "RPC_URL": "@rpc_url",
+    "PORT": "3001",
+    "NODE_ENV": "production"
+  }
+}
