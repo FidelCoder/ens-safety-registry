@@ -167,7 +167,7 @@ function ResultCard({ result, onReport, account }) {
                   <span className="factor-value" style={{ 
                     color: getFactorSeverity('balanceExposure', privacyFactors.balanceExposure).color 
                   }}>
-                    {privacyFactors.balanceExposure} ETH ({getFactorSeverity('balanceExposure', privacyFactors.balanceExposure).level})
+                    {Number(privacyFactors.balanceExposure).toFixed(4)} ETH ({getFactorSeverity('balanceExposure', privacyFactors.balanceExposure).level})
                   </span>
                 </div>
                 <p className="factor-tip">Holding balance makes address trackable</p>
@@ -209,22 +209,13 @@ function ResultCard({ result, onReport, account }) {
             </div>
           )}
 
-          {privacyScore < 70 && (
+          {result.privacyRecommendations && result.privacyRecommendations.length > 0 && (
             <div className="privacy-recommendations">
-              <h4>💡 How to Improve Privacy:</h4>
+              <h4>💡 Privacy Recommendations:</h4>
               <ul>
-                {privacyFactors?.transactionActivity > 20 && (
-                  <li>Use fresh addresses for each major transaction</li>
-                )}
-                {privacyFactors?.balanceExposure > 1 && (
-                  <li>Split funds across multiple addresses</li>
-                )}
-                {privacyFactors?.addressReuse > 50 && (
-                  <li>Avoid repeatedly interacting with same addresses</li>
-                )}
-                <li>Consider using privacy-preserving tools (mixers, tornado)</li>
-                <li>Generate new addresses with HD wallets</li>
-                <li>Avoid direct exchange interactions when possible</li>
+                {result.privacyRecommendations.map((rec, i) => (
+                  <li key={i}>{rec}</li>
+                ))}
               </ul>
             </div>
           )}

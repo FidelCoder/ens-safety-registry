@@ -14,13 +14,20 @@ function App() {
 
   const handleSearch = async (address) => {
     setLoading(true);
+    console.log(`🔍 Searching for address: ${address}`);
     try {
       const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      console.log(`📡 API URL: ${apiUrl}/api/check/${address}`);
+      
       const response = await fetch(`${apiUrl}/api/check/${address}`);
       const data = await response.json();
+      
+      console.log('✅ Search result:', data);
+      console.log(`📊 Privacy Factors:`, data.privacyFactors);
+      
       setSearchResult(data);
     } catch (error) {
-      console.error('Search failed:', error);
+      console.error('❌ Search failed:', error);
       alert('Failed to check address. Make sure the backend API is running.');
     } finally {
       setLoading(false);

@@ -2,6 +2,7 @@ const express = require('express');
 const { ethers } = require('ethers');
 const { getContractInstance } = require('../utils/contract');
 const { aggregateExternalData } = require('../utils/external');
+const { calculatePrivacyScore } = require('../utils/privacy');
 
 const router = express.Router();
 
@@ -32,10 +33,6 @@ router.get('/:address', async (req, res) => {
     const [isFlagged, reportIds] = await contract.checkAddress(address);
     const riskScore = await contract.calculateRiskScore(address);
     
-    // Get detailed privacy analysis
-    const [privacyScore, privacyGrade, privacyFactors] = await contract.getPrivacyAnalysis(address);
-    const gradeString = await contract.getPrivacyGradeString(privacyGrade);
-
     // Get external data (from known scam lists)
     const externalData = await aggregateExternalData(address);
 
@@ -58,19 +55,17 @@ router.get('/:address', async (req, res) => {
       }
     }
 
+    // Calculate REAL privacy score from blockchain data + reports
+    const privacyData = await calculatePrivacyScore(address, reports.length);
+
     const result = {
       address,
       isFlagged,
       riskScore: Number(riskScore),
-      privacyScore: Number(privacyScore),
-      privacyGrade: gradeString,
-      privacyFactors: {
-        transactionActivity: Number(privacyFactors[0]),
-        balanceExposure: Number(privacyFactors[1]),
-        publicScrutiny: Number(privacyFactors[2]),
-        addressReuse: Number(privacyFactors[3]),
-        isContract: Number(privacyFactors[4]) === 1
-      },
+      privacyScore: privacyData.score,
+      privacyGrade: privacyData.grade,
+      privacyFactors: privacyData.factors,
+      privacyRecommendations: privacyData.recommendations,
       reportCount: reports.length,
       reports,
       externalFlags: externalData,
