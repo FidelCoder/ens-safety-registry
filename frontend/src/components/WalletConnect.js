@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './WalletConnect.css';
-import { connectWallet, getCurrentAccount, formatAddress, isMetaMaskInstalled } from '../utils/wallet';
+import { connectWallet, getCurrentAccount, formatAddress, isMetaMaskInstalled, getChainId } from '../utils/wallet';
 
 function WalletConnect({ onAccountChange }) {
   const [account, setAccount] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [network, setNetwork] = useState(null);
 
   useEffect(() => {
     // Check if already connected
@@ -28,6 +29,19 @@ function WalletConnect({ onAccountChange }) {
     if (currentAccount) {
       setAccount(currentAccount);
       onAccountChange && onAccountChange(currentAccount);
+      
+      // Check network
+      const chainId = await getChainId();
+      setNetwork(getNetworkName(chainId));
+    }
+  };
+
+  const getNetworkName = (chainId) => {
+    switch (chainId) {
+      case 1: return 'Mainnet';
+      case 11155111: return 'Sepolia';
+      case 5: return 'Goerli';
+      default: return `Chain ${chainId}`;
     }
   };
 
@@ -47,6 +61,10 @@ function WalletConnect({ onAccountChange }) {
       const connectedAccount = await connectWallet();
       setAccount(connectedAccount);
       onAccountChange && onAccountChange(connectedAccount);
+      
+      // Get network after connection
+      const chainId = await getChainId();
+      setNetwork(getNetworkName(chainId));
     } catch (error) {
       console.error('Failed to connect wallet:', error);
       alert(error.message);
@@ -71,11 +89,25 @@ function WalletConnect({ onAccountChange }) {
   }
 
   if (account) {
+    const isSepolia = network === 'Sepolia';
     return (
       <div className="wallet-connect">
         <div className="connected-wallet">
           <span className="wallet-icon">🦊</span>
           <span className="wallet-address">{formatAddress(account)}</span>
+          <span 
+            className="network-badge" 
+            style={{ 
+              background: isSepolia ? '#3498db' : '#e74c3c',
+              color: 'white',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              marginLeft: '8px'
+            }}
+          >
+            {network || 'Unknown'}
+          </span>
         </div>
       </div>
     );

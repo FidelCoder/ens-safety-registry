@@ -8,7 +8,7 @@ export const isMetaMaskInstalled = () => {
 };
 
 /**
- * Connect to MetaMask wallet
+ * Connect to MetaMask wallet and switch to Sepolia
  */
 export const connectWallet = async () => {
   if (!isMetaMaskInstalled()) {
@@ -16,9 +16,20 @@ export const connectWallet = async () => {
   }
 
   try {
+    // Request account access
     const accounts = await window.ethereum.request({ 
       method: 'eth_requestAccounts' 
     });
+    
+    // Check current network
+    const chainId = await getChainId();
+    const SEPOLIA_CHAIN_ID = 11155111;
+    
+    // If not on Sepolia, prompt to switch
+    if (chainId !== SEPOLIA_CHAIN_ID) {
+      console.log(`Current network: ${chainId}, switching to Sepolia (${SEPOLIA_CHAIN_ID})...`);
+      await switchToSepolia();
+    }
     
     return accounts[0];
   } catch (error) {
@@ -85,6 +96,46 @@ export const switchNetwork = async (chainId) => {
       throw new Error('Please add this network to MetaMask first');
     }
     throw error;
+  }
+};
+
+/**
+ * Switch to Sepolia testnet
+ */
+export const switchToSepolia = async () => {
+  const SEPOLIA_CHAIN_ID = 11155111; // 0xaa36a7
+  
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: '0xaa36a7' }], // Sepolia chain ID in hex
+    });
+    console.log('✅ Switched to Sepolia testnet');
+  } catch (error) {
+    // If Sepolia is not added to MetaMask, add it
+    if (error.code === 4902) {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: '0xaa36a7',
+            chainName: 'Sepolia Testnet',
+            nativeCurrency: {
+              name: 'Sepolia ETH',
+              symbol: 'SEP',
+              decimals: 18
+            },
+            rpcUrls: ['https://sepolia.infura.io/v3/'],
+            blockExplorerUrls: ['https://sepolia.etherscan.io']
+          }]
+        });
+        console.log('✅ Added and switched to Sepolia testnet');
+      } catch (addError) {
+        throw new Error('Failed to add Sepolia network to MetaMask');
+      }
+    } else {
+      throw error;
+    }
   }
 };
 
