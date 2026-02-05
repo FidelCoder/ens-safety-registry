@@ -14,12 +14,13 @@ function WalletConnect({ onAccountChange }) {
     // Listen for account changes
     if (isMetaMaskInstalled()) {
       window.ethereum.on('accountsChanged', handleAccountsChanged);
-      window.ethereum.on('chainChanged', () => window.location.reload());
+      window.ethereum.on('chainChanged', handleChainChanged);
     }
 
     return () => {
       if (isMetaMaskInstalled()) {
         window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        window.ethereum.removeListener('chainChanged', handleChainChanged);
       }
     };
   }, []);
@@ -30,9 +31,14 @@ function WalletConnect({ onAccountChange }) {
       setAccount(currentAccount);
       onAccountChange && onAccountChange(currentAccount);
       
-      // Check network
+      // Check network and auto-switch if not Sepolia
       const chainId = await getChainId();
       setNetwork(getNetworkName(chainId));
+      
+      const SEPOLIA_CHAIN_ID = 11155111;
+      if (chainId !== SEPOLIA_CHAIN_ID) {
+        console.log(`⚠️ Wrong network detected (${getNetworkName(chainId)}), please switch to Sepolia`);
+      }
     }
   };
 
@@ -53,6 +59,12 @@ function WalletConnect({ onAccountChange }) {
       setAccount(accounts[0]);
       onAccountChange && onAccountChange(accounts[0]);
     }
+  };
+
+  const handleChainChanged = async (chainIdHex) => {
+    const chainId = parseInt(chainIdHex, 16);
+    console.log(`Network changed to: ${chainId}`);
+    setNetwork(getNetworkName(chainId));
   };
 
   const handleConnect = async () => {
@@ -103,10 +115,13 @@ function WalletConnect({ onAccountChange }) {
               padding: '4px 8px',
               borderRadius: '4px',
               fontSize: '12px',
-              marginLeft: '8px'
+              marginLeft: '8px',
+              cursor: isSepolia ? 'default' : 'pointer'
             }}
+            onClick={!isSepolia ? handleConnect : undefined}
+            title={!isSepolia ? 'Click to switch to Sepolia' : ''}
           >
-            {network || 'Unknown'}
+            {network || 'Unknown'} {!isSepolia && '⚠️'}
           </span>
         </div>
       </div>
