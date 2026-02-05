@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = "build"
+
+[build.environment]
+  NODE_VERSION = "18"
+  REACT_APP_CONTRACT_ADDRESS = "0x69Ba96799Bd414968854A3cb35162d33683554C2"
+  REACT_APP_API_URL = "http://localhost:3001"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
